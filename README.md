@@ -36,9 +36,6 @@ CTF write-ups grouped by category and difficulty.
 ### Medium
 - [Ascii](Writeups/Web/Medium/Ascii.md)
 
-### Difficulty not stated
-- [Notepad](Writeups/Web/Unspecified/Notepad.md)
-
 ## Crypto
 
 ### Easy
