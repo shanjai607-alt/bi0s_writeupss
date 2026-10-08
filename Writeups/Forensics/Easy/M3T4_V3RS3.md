@@ -1,7 +1,6 @@
 # M3T4_V3RS3 — Writeup
+# Forensics(Easy)
 
-**Category:** Forensics  
-**Difficulty:** Easy
 
 ## Analysis
 

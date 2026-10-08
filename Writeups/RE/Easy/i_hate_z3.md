@@ -1,4 +1,5 @@
 # i_hate_z3 — Writeup
+# RE(Easy)
 
 **Category:** Reverse Engineering  
 **Difficulty:** Easy

@@ -1,4 +1,5 @@
-Random-ish Writeup
+# Random-ish Writeup
+# Crypto(Med)
 
 I started by looking at the given Python code. The important part was the random number generator:
 

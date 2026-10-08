@@ -1,6 +1,6 @@
 # XOR Again — Writeup
 
-## Analysis
+# Crypto(Easy)
 
 The challenge uses a repeating three-byte XOR key:
 
