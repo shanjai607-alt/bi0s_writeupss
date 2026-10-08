@@ -1,7 +1,5 @@
 # bi0s_writeupss
 
-CTF write-ups grouped by category and difficulty.
-
 ## Forensics
 
 ### Easy
