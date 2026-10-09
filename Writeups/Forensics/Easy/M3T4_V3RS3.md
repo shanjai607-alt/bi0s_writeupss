@@ -10,7 +10,7 @@ ExifTool reveals a custom PNG metadata field named `Fl 4g` containing the flag. 
 
 ## Commands
 
-Run these commands in Terminal:
+I ran these commands in the terminal:
 
 ```bash
 cd ~/Downloads/M3T4_V3RS3_handout

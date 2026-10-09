@@ -1,60 +1,37 @@
-# Random-ish Writeup
+# Random-ish
 # Crypto(Med)
 
-I started by looking at the given Python code. The important part was the random number generator:
+I looked at the generator and noticed it was a Linear Congruential Generator (LCG):
 
-self.state = (self.a * self.state + self.c) % self.modulus
+```text
+next = (a × state + c) mod modulus
+```
 
-This is a Linear Congruential Generator (LCG), which means the values are predictable if we have enough consecutive outputs.
+The challenge gave me six consecutive outputs and the modulus. Although the values looked random, an LCG follows a predictable pattern. I used the differences between consecutive outputs to recover its two unknown values:
 
-The program gave these six outputs:
-
-291473454
-604141018
-2683955372
-947114353
-1563186696
-3670295563
-
-The modulus was:
-
-3873239791
-
-I used the differences between consecutive outputs and the LCG formula to recover the two unknown values, `a` and `c`.
-
-The recovered values were:
-
+```text
 a = 1940768799
 c = 551749767
+```
 
-The program then generates one more value using:
+Then I used the sixth output as the current state and applied the formula once more:
 
-next = (a * current + c) % modulus
+```text
+key = (a × 3670295563 + c) mod 3873239791
+    = 385581677
+```
 
-Using the sixth output, I calculated the next value:
+The program had XORed the flag, converted to an integer, with this key. XOR is reversible: applying the same key again gives back the original integer. I XORed the ciphertext with `385581677` and converted the result back into bytes to get the flag.
 
-key = 385581677
+The main trick was realizing the “random” values came from an LCG, so I could recover its settings and predict the next value.
 
-This value is used as the XOR key.
+**Recovered values:**
 
-The program creates the ciphertext using:
-
-flag_int = int.from_bytes(FLAG, byteorder="big")
-ciphertext = flag_int ^ key
-
-So I reversed the XOR operation using:
-
-flag_int = ciphertext ^ key
-
-and converted the resulting integer back into bytes to recover the flag.
-
-The main trick was realizing that the generator was not actually random. Since it was an LCG, the six given outputs were enough to recover its parameters and predict the seventh output.
-
-Recovered values:
-
-a = 1940768799
-c = 551749767
+```text
+a       = 1940768799
+c       = 551749767
 modulus = 3873239791
-key = 385581677
+key     = 385581677
+```
 
-flag-bi0s{l1n3ar_but_n0t_s3cur3}
+**Flag:** `flag-bi0s{l1n3ar_but_n0t_s3cur3}`

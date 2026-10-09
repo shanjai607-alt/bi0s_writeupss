@@ -19,6 +19,6 @@ file extracted_file
 cat extracted_file
 ```
 
-That revealed the secret. The flag format for this challenge is `BIOS(...)`.
+That revealed the flag...
 
-**Flag:** `BIOS(<put the recovered flag here>)`
+**Flag:** `BI0S(5HR3K-15-H4PPYLY-5H4R1NG-H1S-53CRET-5N4CK5-W1TH-Y0U!!)`

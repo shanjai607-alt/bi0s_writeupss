@@ -3,11 +3,11 @@
 
 ## Challenge summary
 
-The challenge asked me to solve assembly puzzles to get the flag. The attached file was a Linux program named `ASM_LABS`. I was using macOS, so I first checked what kind of file it was instead of trying to run it.
+The challenge asked me to solve assembly puzzles to get the flag. The attached file was a Linux program named `ASM_LABS`. I first checked what kind of file it was instead of trying to run it.
 
 I then inspected the program and found that it contains AES-encrypted data, along with the key and IV needed to decrypt it. Decrypting the challenge’s stored ciphertext revealed the flag.
 
-## Step 1: Check the challenge file
+## Checked the challenge file
 
 I opened Terminal and checked the file type:
 
@@ -17,7 +17,7 @@ file "/Users/shanjai/Downloads/handout-3/ASM_LABS"
 
 This showed that `ASM_LABS` is a 64-bit Linux executable. Since I was on macOS, it would not run directly as a normal Mac program.
 
-## Step 2: Look for useful text inside the program
+## Looked for useful text inside the program
 
 I used `strings` to display readable text stored in the executable:
 
@@ -27,7 +27,7 @@ strings "/Users/shanjai/Downloads/handout-3/ASM_LABS" | grep -iE 'flag|level|ass
 
 This showed messages about assembly puzzles, the Zero Flag (`ZF`), the Sign Flag (`NF` or `SF`), and completing levels. It also showed that the program contains a bonus assembly puzzle.
 
-## Step 3: Inspect the program’s symbols and assembly references
+## Inspected the program’s symbols and assembly references
 
 I checked the program’s named functions for clues about how it worked:
 
@@ -43,7 +43,7 @@ objdump -d --disassembler-options=intel "/Users/shanjai/Downloads/handout-3/ASM_
 
 The references showed that the program passes encrypted data, a key, and an IV to the AES decryption function. An **IV**, or initialization vector, is an extra value used with CBC-mode encryption.
 
-## Step 4: Find the encrypted bytes, key, and IV
+## Found the encrypted bytes, key, and IV
 
 I viewed the relevant data stored in the executable:
 
@@ -59,7 +59,7 @@ The bytes near offset `0x16380` were the ciphertext used by `feeere`. The nearby
 
 I treated the ciphertext as binary data. The first `xxd` command prints it as hexadecimal text, so I used `xxd -r -p` to turn that text back into bytes before passing it to OpenSSL.
 
-## Step 5: Decrypt the ciphertext
+## Decrypted the ciphertext
 
 I ran this command to decrypt the 48 bytes with AES-128-CBC:
 
@@ -84,10 +84,6 @@ The command printed the flag:
 ```text
 bi0s{k4444_m3333_haaaa_meeee_h4444!!!}
 ```
-
-## Why the command uses `-nopad`
-
-The decrypted bytes include padding at the end. I used `-nopad` so OpenSSL would output those bytes as-is, then removed the newline characters with `tr -d '\n'`. The flag is the readable `bi0s{...}` text in that output.
 
 ## Final flag
 
